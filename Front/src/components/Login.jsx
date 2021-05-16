@@ -3,7 +3,7 @@ import axios from "axios"
 import { getCurrentUser } from "../store/currentUser"
 import { useDispatch } from "react-redux"
 import { useHistory, Link } from "react-router-dom"
-import { validateEmail } from "../../utils/methods"
+import { validateEmail } from "../../helpers/methods"
 
 const Login = () => {
   const [email, setEmail] = useState("")
@@ -69,7 +69,7 @@ const Login = () => {
       <form onSubmit={handleSubmit}>
         <label>Email</label>
         <input
-          type="email"
+          type="string"
           name="email"
           onChange={(event) => setEmail(event.target.value)}
         />

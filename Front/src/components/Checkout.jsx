@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux"
 import { useHistory } from "react-router-dom"
 import { clearStoreCart } from "../store/currentCartItems"
 import { loadStoreCart } from "../store/currentCart"
-import { validateLetters, validateNumbers } from "../../utils/methods"
+import { validateLetters, validateNumbers } from "../../helpers/methods"
 
 const Checkout = () => {
   const currentCart = useSelector((state) => state.currentCart)

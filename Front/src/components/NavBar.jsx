@@ -1,97 +1,132 @@
-import React, { useState } from "react"
-import axios from "axios"
+import React, { useEffect, useState } from "react"
+import { useSelector, useDispatch } from "react-redux"
+import { useHistory } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { getCurrentUser } from "../store/currentUser"
-import { useDispatch } from "react-redux"
-import { useHistory, Link } from "react-router-dom"
-import { validateEmail } from "../../utils/methods"
+import { loadStoreCart } from "../store/currentCart"
+import { clearStoreCart } from "../store/currentCartItems"
+import CategoryDropdown from "./CategoryDropdown"
 
-const Login = () => {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+const NavBar = () => {
+  const currentCartItems = useSelector((state) => state.currentCartItems)
+  const currentUser = useSelector((state) => state.currentUser)
+  const [searchQuery, setSearchQuery] = useState("")
   const dispatch = useDispatch()
   const history = useHistory()
-  const [emailError, setEmailError] = useState("")
-  const [showButtonSpinner, setShowButtonSpinner] = useState(false)
+
+  const token = localStorage.getItem("token")
+
+  const handleChange = function (evt) {
+    setSearchQuery(evt.target.value)
+  }
 
   const handleSubmit = function (event) {
     event.preventDefault()
-    if (formValidation()) {
-      setShowButtonSpinner(true)
-      axios
-        .post("/api/users/login", {
-          email,
-          password,
-        })
-        .then((newUser) => {
-          localStorage.setItem("token", newUser.data.token)
-          dispatch(
-            getCurrentUser({
-              id: newUser.data.user.id,
-              isAdmin: newUser.data.user.isAdmin,
-            })
-          )
-          if (newUser.data.user.isAdmin) history.push("/")
-          else history.goBack()
-        })
-        .catch((error) => {
-          setShowButtonSpinner(false)
-          setError(error.response.data)
-        })
-    }
+    setSearchQuery("")
+    history.push("/search?q=" + searchQuery)
   }
 
-  const formValidation = () => {
-    setEmailError("")
-    const elem = document.getElementsByTagName("Input")[1]
-    if (!validateEmail(email)) {
-      elem.className = "invalid-sign-up-or-log-in", setEmailError("A valid Email is Required")
-    }
-    return (validateEmail(email))
+  const handleLogout = function (event) {
+    localStorage.removeItem("token")
+    dispatch(getCurrentUser(""))
+    dispatch(loadStoreCart("loading"))
+    dispatch(clearStoreCart())
+    history.push("/")
   }
-
-  React.useEffect(() => {
-    setError(false)
-  }, [email, password])
-
-  const Error = () => (
-    <div className="sign-up-or-log-in-error">
-      {error}
-    </div>
-  )
 
   return (
-    <div className="sign-up-or-log-in">
-      <h2>
-        Welcome back
-        <hr />
-      </h2>
-      <form onSubmit={handleSubmit}>
-        <label>Email</label>
-        <input
-          type="email"
-          name="email"
-          onChange={(event) => setEmail(event.target.value)}
-        />
-        <div className="sign-up-or-log-in-login-error">{emailError}</div>
-        <label>Password</label>
-        <input
-          type="password"
-          name="password"
-          onChange={(event) => setPassword(event.target.value)}
-        />
-        <button>
-          {showButtonSpinner ? <div className="small-spinner"></div> : "Log In"}
-        </button>
-      </form>
-      <Link to="/register">
-        <div className="sign-up-or-log-in-no-account">
-          Don't have an account? Sign up
+    <div className="navbar-container">
+      <div className="navbar-first-row-container">
+        <div className="navbar-first-row">
+          <div className="logo-container">
+            <Link to="/">
+              <div className="logo">Clement</div>
+            </Link>
+            <div className="logo-tagline">online wine shop</div>
+          </div>
+          <div className="search-and-log-in">
+            <div className="search">
+              {/* <img className="search-icon" src="icons/search.png"></img> */}
+              {currentUser.isAdmin ? (
+                <div className="navbar-admin-control-panel">
+                  Admin Control Panel
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit}>
+                  <input
+                    onChange={handleChange}
+                    type="text"
+                    placeholder="search"
+                    value={searchQuery}
+                  />
+                </form>
+              )}
+            </div>
+            {token ? (
+              <div className="logged-in">
+                {currentUser.isAdmin ? null : (
+                  <Link to="/cart">
+                    <button>Cart</button>
+                  </Link>
+                )}
+                {!currentUser.isAdmin && currentCartItems.length ? (
+                  <div className="cart-quantity">
+                    {currentCartItems.reduce(
+                      (accumulator, currentValue) =>
+                        accumulator + Number(currentValue.quantity),
+                      0
+                    )}
+                  </div>
+                ) : null}
+                {currentUser.isAdmin ? null : (
+                  <Link to="/history">
+                    <button>Orders</button>
+                  </Link>
+                )}
+                <button onClick={handleLogout}>Log Out</button>
+              </div>
+            ) : (
+              <div className="not-logged-in">
+                {/* <Link to="/cart">
+                  <button>Cart</button>
+                </Link>
+                {localItems ? (
+                  <div className="cart-quantity">
+                    {localItems.reduce(
+                      (accumulator, currentValue) =>
+                        accumulator + Number(currentValue.quantity),
+                      0
+                    )}
+                  </div>
+                ) : null} */}
+                <Link to="/cart">
+                  <button>Cart</button>
+                </Link>
+                {currentCartItems.length ? (
+                  <div className="cart-quantity">
+                    {currentCartItems.reduce(
+                      (accumulator, currentValue) =>
+                        accumulator + Number(currentValue.quantity),
+                      0
+                    )}
+                  </div>
+                ) : null}
+                <Link to="/login">
+                  <button>Log In</button>
+                </Link>
+                <Link to="/register">
+                  <button>Sign Up</button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
-      </Link>
-      {error && <Error />}
+      </div>
+      <hr />
+      <CategoryDropdown />
+      <hr />
     </div>
   )
 }
 
-export default Login
+export default NavBar

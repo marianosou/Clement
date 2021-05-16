@@ -3,7 +3,7 @@ import axios from "axios"
 import { useDispatch } from "react-redux"
 import { getCurrentUser } from "../store/currentUser"
 import { useHistory } from "react-router-dom"
-import { validateEmail } from "../../utils/methods"
+import { validateEmail } from "../../helpers/methods"
 
 const NewUser = () => {
   const [email, setEmail] = useState("")
